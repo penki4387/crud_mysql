@@ -1,16 +1,56 @@
 import db from '../db.js';
-
+import jwt from 'jsonwebtoken'
+const JWT_SECRET = 'secret_key';
+import bcrypt from 'bcrypt';
 export default class UserServices {
-  async createUser(body) {
+    async createUser(body) {
+        try {
+          const salt = await bcrypt.genSalt(10);
+          body.password = await bcrypt.hash(body.password, salt);
+      
+          const [result] = await db.query('INSERT INTO users SET ?', body);
+      
+          if (result.affectedRows === 0) {
+            throw { code: 400, message: 'Failed to insert user' };
+          }
+      
+          const token = jwt.sign({ id: result.insertId }, JWT_SECRET, { expiresIn: '1h' });
+          return { id: result.insertId, token, ...body };
+          
+        } catch (err) {
+          console.error('Error creating user:', err);
+          throw { code: 500, message: 'Failed to create user' };
+        }
+      }
+      
+
+  async loginUser(body) {
+    const { email, password } = body;
     
     try {
-      const [result] = await db.query('INSERT INTO users SET ?', body);
-      return { id: result.insertId, ...body };
+
+      const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+      if (users.length === 0) {
+        throw { code: 404, message: 'User not found' };
+      }
+      const user = users[0];
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        throw { code: 401, message: 'Invalid credentials' };
+      }
+
+      const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
+
+      return { id: user.id, token, name: user.name, email: user.email };
+      
     } catch (err) {
-      console.error('Error creating user:', err);
-      throw { code: 500, message: 'Failed to create user' };
+      console.error('Error logging in user:', err);
+      throw { code: err.code || 500, message: err.message || 'Login failed' };
     }
   }
+
+
 
   async updateUser(body, userId) {
     try {
@@ -28,7 +68,7 @@ export default class UserServices {
   async getAllUsers() {
     try {
       const result = await db.query('SELECT * FROM users');
-      return result
+      return result||[]
     } catch (err) {
       console.error('Error fetching users:', err);
       throw { code: 500, message: 'Failed to fetch users' };

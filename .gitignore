@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+node_modules
+.idea
+reports
+coverage
+yarn-error.log
+uploads
+.DS_Store
+.nyc_output
+dist
+package-lock.json
+temp

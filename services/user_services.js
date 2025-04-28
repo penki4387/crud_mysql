@@ -32,12 +32,12 @@ export default class UserServices {
       const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
 
       if (users.length === 0) {
-        throw { code: 404, message: 'User not found' };
+        return { code: 404, message: 'User not found' };
       }
       const user = users[0];
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        throw { code: 401, message: 'Invalid credentials' };
+        return { code: 401, message: 'Invalid credentials' };
       }
 
       const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
@@ -46,7 +46,7 @@ export default class UserServices {
       
     } catch (err) {
       console.error('Error logging in user:', err);
-      throw { code: err.code || 500, message: err.message || 'Login failed' };
+      return { code: err.code || 500, message: err.message || 'Login failed' };
     }
   }
 

@@ -13,6 +13,12 @@ export default class userControllers{
             res.json(result)
         }).catch(err=>next(err))
     }
+
+    loginUser(req,res,next){
+        UserServices.prototype.loginUser(req.body).then(result=>{
+            res.json(result)
+        }).catch(err=>next(err))
+    }
     
     getAllUsers(req,res,next){
         UserServices.prototype.getAllUsers().then(result=>{

@@ -68,12 +68,14 @@ export default class UserServices {
   async getAllUsers() {
     try {
       const result = await db.query('SELECT * FROM users');
-      return result||[]
+      console.log(result,"================="); 
+      return result[0] || [];  
     } catch (err) {
       console.error('Error fetching users:', err);
       throw { code: 500, message: 'Failed to fetch users' };
     }
   }
+  
 
   async deleteUser(userId) {
     try {
